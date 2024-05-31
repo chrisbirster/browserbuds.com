@@ -76,11 +76,6 @@ function snippingTool() {
 
           this.downloadImage(screenshotUrl);
 
-          // Show loading indicator
-          const loading = document.createElement("div");
-          loading.innerText = "Processing...";
-          document.body.appendChild(loading);
-
           fetch("http://localhost:5001/process", {
             method: "POST",
             headers: {
