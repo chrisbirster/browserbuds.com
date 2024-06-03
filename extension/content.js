@@ -9,6 +9,31 @@ function snippingTool() {
     isDrawing: false,
     overlay: null,
 
+    convertToLocalTime(utcTime) {
+      if (utcTime === "TODO") {
+        const now = new Date();
+        const defaultDate = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
+        return defaultDate.toISOString().replace(/[-:.]/g, "").split(".")[0];
+      }
+
+      // Convert the UTC time string to ISO 8601 format
+      const isoTime = `${utcTime.slice(0, 4)}-${utcTime.slice(4, 6)}-${utcTime.slice(6, 8)}T${utcTime.slice(9, 11)}:${utcTime.slice(11, 13)}:${utcTime.slice(13, 15)}`;
+      const date = new Date(isoTime);
+
+      const localDate = new Date(
+        date.toLocaleString("en-US", {
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
+      );
+      const year = localDate.getFullYear();
+      const month = String(localDate.getMonth() + 1).padStart(2, "0");
+      const day = String(localDate.getDate()).padStart(2, "0");
+      const hours = String(localDate.getHours()).padStart(2, "0");
+      const minutes = String(localDate.getMinutes()).padStart(2, "0");
+      const seconds = String(localDate.getSeconds()).padStart(2, "0");
+
+      return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+    },
     startSnipping() {
       this.resetSnipping();
       this.overlay = document.createElement("div");
@@ -74,7 +99,7 @@ function snippingTool() {
           const screenshotUrl = response.screenshotUrl;
           console.log("Captured Image:", screenshotUrl);
 
-          this.downloadImage(screenshotUrl);
+          // this.downloadImage(screenshotUrl);
 
           fetch("http://localhost:5001/process", {
             method: "POST",
@@ -92,36 +117,24 @@ function snippingTool() {
               console.log("Structured Data:", data.structured_data);
               console.log("Uploaded Image Path:", data.filepath);
 
-              // Remove loading indicator
-              document.body.removeChild(loading);
+              const { title, start, end, description, location } =
+                data.structured_data;
 
-              // Extract the event details with defaults if undefined
-              const {
-                title = "TODO",
-                start = "TODO",
-                end = "TODO",
-                description = "TODO",
-                location = "TODO",
-              } = data.structured_data;
+              const startFormatted = this.convertToLocalTime(start);
+              const endFormatted = this.convertToLocalTime(end);
 
-              console.log(
-                `Event Details: title=${title}, start=${start}, end=${end}, description=${description}, location=${location}`,
-              );
+              // Generate the calendar event URL
+              const calendarUrl = `https://calendar.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(
+                title,
+              )}&dates=${startFormatted}/${endFormatted}&details=${encodeURIComponent(
+                description,
+              )}&location=${encodeURIComponent(location)}`;
 
-              // Format the start and end dates if they are not TODO
-              const startFormatted =
-                start !== "TODO" ? start.replace(/[:-]/g, "") : "TODO";
-              const endFormatted =
-                end !== "TODO" ? end.replace(/[:-]/g, "") : "TODO";
-
-              const calendarUrl = `https://calendar.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startFormatted}/${endFormatted}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
               console.log("Calendar URL:", calendarUrl);
               window.open(calendarUrl, "_blank");
             })
             .catch((error) => {
               console.error("Error processing image:", error);
-              // Remove loading indicator
-              document.body.removeChild(loading);
             });
 
           this.resetSnipping();

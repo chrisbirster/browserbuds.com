@@ -29,7 +29,7 @@ def convert_to_utc(date_str, time_zone_str):
     else:
         local_dt = dt.astimezone(local)
     utc_dt = local_dt.astimezone(pytz.utc)
-    return utc_dt.strftime('%Y%m%dT%H%M%SZ')
+    return utc_dt.strftime('%Y%m%dT%H%M%S')
 
 def image_to_base64(image):
     buffered = BytesIO()
@@ -39,13 +39,13 @@ def image_to_base64(image):
 def extract_event_details(image_base64):
     command = """
     Extract the following details from the image:
-    - Title
-    - Start date and time (in the format YYYYMMDDTHHmmssZ)
-    - End date and time (in the format YYYYMMDDTHHmmssZ)
-    - Description
-    - Location
+    - Title (default to "TODO" if not found)
+    - Start date and time (in the format YYYYMMDDTHHmmss, default to "TODO" if not found)
+    - End date and time (in the format YYYYMMDDTHHmmss, default to "TODO" if not found)
+    - Description (default to "TODO" if not found)
+    - Location (default to "TODO" if not found)
 
-    Output in JSON format with keys 'title', 'start', 'end', 'description', and 'location'.
+    Ensure the output is in JSON format with keys 'title', 'start', 'end', 'description', and 'location'.
     """
 
     user_input = [
@@ -63,9 +63,9 @@ def extract_event_details(image_base64):
 
     response = client.chat.completions.create(
         model="gpt-4o",
-        response_format={ "type": "json_object" },
+        response_format={"type": "json_object"},
         messages=[
-            {"role": "system", "content": "You are a helpful assistant. "},
+            {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": user_input}
         ],
         max_tokens=300
