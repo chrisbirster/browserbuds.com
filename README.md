@@ -1,5 +1,4 @@
-# Browser Buds
+# Screen Sniper Extension Example
 
-A web extension that inserts "buds" or little productivity tools into your browser
-
+A web extension that helps screen captures events into your Google calendar
 
